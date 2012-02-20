@@ -1,0 +1,27 @@
+Vimeo:
+  Endpoint: http://www.vimeo.com/api/oembed.json
+  Schemes:
+    - http://www.vimeo.com/*
+    - http://www.vimeo.com/groups/*/*
+  Test: 
+    - http://vimeo.com/20899145
+    - http://vimeo.com/27423690
+
+YouTube:
+  Endpoint: http://www.youtube.com/oembed
+  Schemes:
+    - http://youtu.be/watch*
+    - http://*.youtube.com/watch*
+    - http://youtube.com/watch*
+  Test:
+    - http://www.youtube.com/watch?v=Z5Cz9MkLNxw
+    - http://youtu.be/watch?v=Z5Cz9MkLNxw
+
+Flickr:
+  Endpoint: http://www.flickr.com/services/oembed/
+  Schemes:
+    - http://flickr.com/photos/*
+    - http://www.flickr.com/photos/*
+  Test:
+    - http://www.flickr.com/photos/mlebkowski/1285312626/in/photostream
+

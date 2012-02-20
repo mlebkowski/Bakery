@@ -1,0 +1,9 @@
+                $oEmbedProviders = Spyc::YAMLLoad('etc/oembed.yaml');
+                $oembed = new oEmbed();
+                foreach ($oEmbedProviders as $provider) {
+//                      print_r($provider);
+                        $oembed->addProvider(new oEmbedProvider($provider['Endpoint'], $provider['Schemes']));  
+                }
+//              exit;
+                MarkdownEmbed::init($oembed);
+
