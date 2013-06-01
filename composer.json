@@ -1,0 +1,25 @@
+{
+    "name": "mlebkowski/bakery",
+    "description": "Bake markdown files into a static site",
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "Maciej Łebkowski",
+            "email": "m.lebkowski@gmail.com"
+        }
+    ],
+    "require": {
+        "silex/silex": "v1.0.0",
+        "symfony/yaml": "v2.2.0",
+        "dropbox/dropbox-sdk": "1.0.1",
+        "igorw/config-service-provider": "*",
+        "knplabs/console-service-provider": "*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Nassau\\Bakery": "src/",
+            "Nassau\\Silex": "src/",
+            "Nassau\\Utils": "src/"
+        }
+    }
+}
