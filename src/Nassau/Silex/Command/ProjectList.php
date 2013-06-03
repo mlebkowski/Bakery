@@ -3,7 +3,6 @@
 namespace Nassau\Silex\Command;
 
 use Dropbox\AccessToken;
-use Nassau\Bakery\ProjectsCollection;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -28,9 +27,6 @@ class ProjectList extends BaseCommand
 			foreach ($project->getPullSources() as $pull)
 			{
 				$output->writeln('   - ' . $pull->getDsn()->getUrl());
-
-				$dropboxClient = $app->getDropboxClient($pull->getDsn()->getUsername(), $pull->getDsn()->getPassword());
-				var_dump($dropboxClient->getAccountInfo());
 			}
 		}
 	}

@@ -13,11 +13,13 @@
         "symfony/yaml": "v2.2.0",
         "dropbox/dropbox-sdk": "1.0.1",
         "igorw/config-service-provider": "*",
-        "knplabs/console-service-provider": "*"
+        "knplabs/console-service-provider": "*",
+        "symfony/process": "2.2.0"
     },
     "autoload": {
         "psr-0": {
             "Nassau\\Bakery": "src/",
+            "Nassau\\Cache": "src/",
             "Nassau\\Silex": "src/",
             "Nassau\\Utils": "src/"
         }

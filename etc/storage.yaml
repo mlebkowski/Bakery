@@ -1,0 +1,21 @@
+Storage:
+  Tables:
+    post:
+      - slug text -- unikalna nazwa źródła
+      - category text -- kategoria
+      - etag text -- nie wiem
+      - date date -- data dodania / stworzenia
+      - modified date -- data aktualizacji
+      - title text -- tytul wyciagniety z contentu
+      - link text -- link zewnetrzny lub slug
+      - deleted bool -- czy skasowano w zrodle?
+      - reparse bool -- potrzebne jest ponowne parsowanie contentu
+      - last_indexed date
+    text:
+      - slug text
+      - value text
+      - parsed date
+    hash:
+      - name text
+      - value text
+      - date date

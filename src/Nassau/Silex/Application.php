@@ -3,16 +3,29 @@
 namespace Nassau\Silex;
 
 use Dropbox\AccessToken;
+use Nassau\Bakery\IndexerInterface;
 use Nassau\Bakery\ProjectsCollection;
+use Nassau\Cache\Cache;
 
 class Application extends \Silex\Application
 {
+	const CACHE_TYPE_MISC = 'misc';
+	const CACHE_TYPE_MARKDOWN = 'markdown';
+
 	/**
 	 * @return \Knp\Console\Application
 	 */
 	public function getConsole()
 	{
 		return $this['console'];
+	}
+
+	/**
+	 * @return IndexerInterface
+	 */
+	public function getIndexer()
+	{
+		return $this['bakery.indexer'];
 	}
 
 	/**
@@ -29,6 +42,7 @@ class Application extends \Silex\Application
 	 * @param string $key
 	 * @param string $secret
 	 *
+	 * @deprecated
 	 * @return \Dropbox\Client
 	 */
 	public function getDropboxClient($key, $secret)
@@ -38,6 +52,19 @@ class Application extends \Silex\Application
 		/** @var \Dropbox\Client $client */
 		$client = $closure($accessToken);
 		return $client;
+	}
+
+	/**
+	 * @param string $type
+	 *
+	 * @return Cache
+	 */
+	public function factoryCache($type)
+	{
+		$factory = $this['cache-factory'];
+		/** @var Cache $cache */
+		$cache = $factory($type);
+		return $cache;
 	}
 
 }

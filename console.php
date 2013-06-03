@@ -6,7 +6,7 @@ $app = require __DIR__ . '/app/app.php';
 
 $console = $app->getConsole();
 
-$dir = new DirectoryIterator($app['src_path'] . '/Nassau/Silex/Command');
+$dir = new DirectoryIterator($app['path.src'] . '/Nassau/Silex/Command');
 /** @var DirectoryIterator $file */
 foreach ($dir as $file)
 {

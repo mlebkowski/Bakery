@@ -2,3 +2,5 @@
 etc/application.yaml
 composer.phar
 vendor
+data/*
+cache/*

@@ -2,6 +2,8 @@
 
 namespace Nassau\Bakery;
 
+use Symfony\Component\HttpFoundation\ParameterBag;
+
 interface DsnInterface
 {
 	/**
@@ -43,4 +45,9 @@ interface DsnInterface
 	 * @return string
 	 */
 	public function getPath();
+
+	/**
+	 * @return ParameterBag
+	 */
+	public function getQuery();
 }

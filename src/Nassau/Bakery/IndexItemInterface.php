@@ -43,4 +43,20 @@ interface IndexItemInterface
 	 * @return string
 	 */
 	public function getETag();
+
+	/**
+	 * @param string $etag
+	 */
+	public function setETag($etag);
+
+	/**
+	 * @return string
+	 */
+	public function getRelativePath();
+
+	/**
+	 * @param string $path
+	 */
+	public function setRelativePath($path);
+
 }

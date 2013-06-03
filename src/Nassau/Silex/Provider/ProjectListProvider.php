@@ -45,7 +45,7 @@ class ProjectListProvider implements ServiceProviderInterface
 		foreach ($this->config as $name => $item)
 		{
 			$project = $this->createProjectFromConfiguration($name, $item);
-			$collection->append($project);
+			$collection->offsetSet($name, $project);
 		}
 	}
 

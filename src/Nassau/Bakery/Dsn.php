@@ -2,6 +2,8 @@
 
 namespace Nassau\Bakery;
 
+use Symfony\Component\HttpFoundation\ParameterBag;
+
 class Dsn implements DsnInterface
 {
 	protected $dsn;
@@ -92,6 +94,20 @@ class Dsn implements DsnInterface
 	public function getPath()
 	{
 		return $this->parsed['path'];
+	}
+
+	/**
+	 * @return ParameterBag
+	 */
+	public function getQuery()
+	{
+		$query = new ParameterBag();
+		if (isset($this->parsed['query']))
+		{
+			$params = parse_url($this->parsed['query']);
+			$query->replace($params);
+		}
+		return $query;
 	}
 
 

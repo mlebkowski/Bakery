@@ -20,4 +20,9 @@ interface PullSourceInterface
 	 * @return string
 	 */
 	public function getTargetPrefix();
+
+	/**
+	 * @return string
+	 */
+	public function getUniqueId();
 }

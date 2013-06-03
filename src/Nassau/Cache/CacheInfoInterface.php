@@ -1,13 +1,13 @@
-<?php namespace Nassau\Cache;
+<?php
+
+namespace Nassau\Cache;
 
 /**
  * This resource can be cached
  **/
 Interface CacheInfoInterface {
   /**
-   * get the unix timestamp of last modification time
-   *
-   * @retrun int last modified time or NULL (cannot be cached)
+   * @retrun \DateTime last modified time or NULL (cannot be cached)
    **/
   public function getLastModifiedTime();
 

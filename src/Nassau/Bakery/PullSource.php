@@ -65,4 +65,13 @@ class PullSource implements PullSourceInterface
 		$this->targetPrefix = $targetPrefix;
 	}
 
+	/**
+	 * @return string
+	 */
+	public function getUniqueId()
+	{
+		return md5($this->dsn->getUrl() . $this->targetPrefix);
+	}
+
+
 }
