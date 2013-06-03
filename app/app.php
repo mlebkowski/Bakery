@@ -28,6 +28,13 @@ $app->register(new ConsoleServiceProvider, array(
 $app->register(new ProjectListProvider);
 $app->register(new StorageFactoryProvider);
 
+$app->register(new Silex\Provider\MonologServiceProvider, array(
+	'monolog.logfile' => $app['path.cache'] . strftime('/bakery-%Y-%m-%d.log'),
+//	'monolog.logfile' => STDOUT,
+	'monolog.name' => strtolower($app['console.name']),
+));
+
+
 $app['dropbox-sdk'] = $app->share(function ($app) {
 
 	$ua = sprintf("%s %s", $app['console.name'], $app['console.version']);
@@ -96,7 +103,13 @@ $app['bakery.indexer'] = $app->share(function (\Nassau\Silex\Application $app)
 	$fetcherFactory = $app['bakery.fetcher-factory'];
 	/** @var Closure $storageFactor */
 	$storageFactor = $app['bakery.storage-factory'];
-	return new \Nassau\Bakery\Indexer($fetcherFactory, $storageFactor);
+	/** @var \Monolog\Logger $monolog */
+	$monolog = $app['monolog'];
+
+	$indexer = new \Nassau\Bakery\Indexer($fetcherFactory, $storageFactor);
+	$indexer->setLogger($monolog);
+
+	return $indexer;
 });
 
 $app['debug'] = true;

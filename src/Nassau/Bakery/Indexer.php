@@ -2,6 +2,7 @@
 
 namespace Nassau\Bakery;
 
+use Monolog\Logger;
 use Nassau\Bakery\Fetcher\FetcherFactory;
 use Nassau\Bakery\Fetcher\FetcherInterface;
 use Nassau\Bakery\Fetcher\HashedFetcherInterface;
@@ -20,7 +21,11 @@ class Indexer implements IndexerInterface
 	 */
 	protected $storageFactory;
 
-	// TODO: add logger;
+	/**
+	 * @var \Monolog\Logger
+	 */
+	protected $logger;
+
 
 	public function __construct(Fetcher\FetcherFactoryInterface $fetcherFactory, \Closure $storageFactory)
 	{
@@ -39,6 +44,27 @@ class Indexer implements IndexerInterface
 
 		// TODO: will produce errors with HashedFetcherInterface
 		$storage->setDeletedFlag();
+	}
+
+	/**
+	 * @param \Monolog\Logger $logger
+	 */
+	public function setLogger(Logger $logger)
+	{
+		$this->logger = $logger;
+	}
+
+	/**
+	 * Adds a log record.
+	 *
+	 * @param string  $message The log message
+	 * @param integer $level   The logging level
+	 *
+	 * @return Boolean Whether the record has been processed
+	 */
+	protected function log($message, $level = Logger::INFO)
+	{
+		return $this->logger && $this->logger->addRecord($level, $message);
 	}
 
 	/**
@@ -81,11 +107,13 @@ class Indexer implements IndexerInterface
 	 */
 	protected function reindexSource(PullSourceInterface $source, Storage $storage, $force = false)
 	{
+		$this->log(sprintf('Indexing source: %s', $source->getDsn()->getUrl()));
 		$fetcher = $this->createFetcher($source);
 
 		if ($fetcher instanceof HashedFetcherInterface && false === $force)
 		{
 			$hash = $storage->getHash($source->getUniqueId());
+			$this->log(sprintf('Using cached content hash: %s', $hash ?: '<comment>empty hash</comment>'), Logger::DEBUG);
 			$index = $fetcher->getIndex($source, $hash);
 		}
 		else
@@ -95,6 +123,7 @@ class Indexer implements IndexerInterface
 
 		if (null === $index)
 		{
+			$this->log('Content has not changed since last time', Logger::DEBUG);
 			return;
 		}
 
@@ -103,6 +132,7 @@ class Indexer implements IndexerInterface
 			$hash = $fetcher->getLastFetchedHash();
 			if ($hash)
 			{
+				$this->log(sprintf('Storing content hash: %s', $hash), Logger::DEBUG);
 				$storage->setHash($source->getUniqueId(), $hash);
 			}
 		}
@@ -117,9 +147,11 @@ class Indexer implements IndexerInterface
 	 */
 	protected function storeIndex($index, Storage $storage)
 	{
+		$this->log(sprintf('Storing %d items', sizeof($index)));
 		foreach ($index as $item) {
 			$exists = $storage->getBySlug($item->getSlug());
 			if ($exists) {
+				$this->log(sprintf(' - updating: %s', $item->getSlug()), Logger::DEBUG);
 				$reparse = 0;
 				// TODO: this is parser dependent
 //				if (new \DateTime($exists['last_indexed']) < "parser date")
@@ -128,6 +160,7 @@ class Indexer implements IndexerInterface
 //				}
 				$storage->update($item->getSlug(), $item->getETag(), $item->getModificationDate(), $reparse);
 			} else {
+				$this->log(sprintf(' - creating: %s', $item->getSlug()), Logger::DEBUG);
 				$storage->create(
 					$item->getSlug(),
 					$item->getRelativePath(),

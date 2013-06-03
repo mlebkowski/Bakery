@@ -14,7 +14,8 @@
         "dropbox/dropbox-sdk": "1.0.1",
         "igorw/config-service-provider": "*",
         "knplabs/console-service-provider": "*",
-        "symfony/process": "2.2.0"
+        "symfony/process": "2.2.0",
+        "monolog/monolog": "*"
     },
     "autoload": {
         "psr-0": {
