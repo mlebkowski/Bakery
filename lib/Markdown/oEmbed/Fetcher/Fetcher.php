@@ -1,4 +1,6 @@
-<?php namespace Markdown\oEmbed\Fetcher;
+<?php
+
+namespace Markdown\oEmbed\Fetcher;
 
 abstract class Fetcher {
 	protected $_endpoint;
@@ -7,6 +9,6 @@ abstract class Fetcher {
 		$this->_endpoint = $endpoint;
 	}
 	
-	abstract public function fetch($url, $options = Array ());
+	abstract public function fetch($url, $options = array ());
 }
 

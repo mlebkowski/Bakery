@@ -6,11 +6,17 @@ use Monolog\Logger;
 use Nassau\Bakery\Fetcher\FetcherFactory;
 use Nassau\Bakery\Fetcher\FetcherInterface;
 use Nassau\Bakery\Fetcher\HashedFetcherInterface;
+use Nassau\Bakery\Parser\ParsedBodyInterface;
+use Nassau\Bakery\Parser\ParserInterface;
 use Nassau\Bakery\Storage\Storage;
 use Nassau\Bakery\IndexItemInterface;
 
 class Indexer implements IndexerInterface
 {
+	/**
+	 * @var ParserInterface
+	 */
+	protected $parser;
 	/**
 	 * @var Fetcher\FetcherFactoryInterface
 	 */
@@ -27,10 +33,14 @@ class Indexer implements IndexerInterface
 	protected $logger;
 
 
-	public function __construct(Fetcher\FetcherFactoryInterface $fetcherFactory, \Closure $storageFactory)
+	public function __construct(
+		Fetcher\FetcherFactoryInterface $fetcherFactory,
+		\Closure $storageFactory,
+		ParserInterface $parser)
 	{
 		$this->fetcherFactory = $fetcherFactory;
 		$this->storageFactory = $storageFactory;
+		$this->parser = $parser;
 	}
 
 	public function rebuildIndex(ProjectInterface $project, $force = false)
@@ -137,28 +147,42 @@ class Indexer implements IndexerInterface
 			}
 		}
 
-		$this->storeIndex($index, $storage);
+		// This clearly needs some more objects
+		$parseQueue = $this->storeIndex($index, $storage);
+		if ($force)
+		{
+			$parseQueue = $index;
+		}
+		$posts = $this->fetchAndParseQueue($parseQueue, $fetcher);
+		$this->storePosts($posts, $storage);
 
 	}
 
 	/**
 	 * @param IndexItemInterface[] $index
 	 * @param Storage $storage
+	 *
+	 * @return IndexItemInterface[]
 	 */
 	protected function storeIndex($index, Storage $storage)
 	{
+		$parseQueue = array ();
+
 		$this->log(sprintf('Storing %d items', sizeof($index)));
 		foreach ($index as $item) {
 			$exists = $storage->getBySlug($item->getSlug());
 			if ($exists) {
 				$this->log(sprintf(' - updating: %s', $item->getSlug()), Logger::DEBUG);
-				$reparse = 0;
-				// TODO: this is parser dependent
-//				if (new \DateTime($exists['last_indexed']) < "parser date")
-//				{
-//					$reparse = 1;
-//				}
+				$reparse = false;
+				if (false === $this->parser->isFresh(new \DateTime($exists['last_indexed'])))
+				{
+					$reparse = true;
+				}
 				$storage->update($item->getSlug(), $item->getETag(), $item->getModificationDate(), $reparse);
+				if ($exists['etag'] !== $item->getETag() || $reparse)
+				{
+					$parseQueue[] = $item;
+				}
 			} else {
 				$this->log(sprintf(' - creating: %s', $item->getSlug()), Logger::DEBUG);
 				$storage->create(
@@ -168,7 +192,51 @@ class Indexer implements IndexerInterface
 					$item->getCreationDate(),
 					$item->getModificationDate()
 				);
+				$parseQueue[] = $item;
 			}
+		}
+		return $parseQueue;
+	}
+
+	/**
+	 * @param IndexItemInterface[] $parseQueue
+	 * @param FetcherInterface $fetcher
+	 *
+	 * @return ParsedBodyInterface[]
+	 */
+	protected function fetchAndParseQueue(array $parseQueue, FetcherInterface $fetcher)
+	{
+		if (0 !== sizeof($parseQueue))
+		{
+			$this->log(sprintf('Parsing %d posts', sizeof($parseQueue)), Logger::INFO);
+		}
+
+		$posts = array ();
+
+		/** @var IndexItemInterface $item */
+		while ($item = array_shift($parseQueue))
+		{
+			$this->log(sprintf(' - parsing: %s', $item->getSlug()), Logger::DEBUG);
+
+			$url = $item->getResourceUrl();
+			$contents = $fetcher->getContents($url);
+
+			$parsedBody = $this->parser->parse($contents);
+			$posts[$item->getSlug()] = $parsedBody;
+		}
+		return $posts;
+	}
+
+	/**
+	 * @param ParsedBodyInterface[] $posts
+	 * @param Storage $storage
+	 */
+	protected function storePosts($posts, $storage)
+	{
+		foreach ($posts as $slug => $post)
+		{
+			$storage->saveText($slug, $post->getContents());
+			$storage->updatePostTitle($slug, $post->getTitle());
 		}
 	}
 

@@ -1,10 +1,17 @@
-<?php namespace Markdown\oEmbed\Provider;
+<?php
+
+namespace Markdown\oEmbed\Provider;
+
 use Markdown\oEmbed\Fetcher\Factory as Factory;
+use Markdown\oEmbed\Fetcher\Fetcher;
 
 class Provider {
-	private $_schemes = Array();
-	private $_endpoint;
-	private $_fetcher;
+	protected $_schemes = array();
+	protected $_endpoint;
+	/**
+	 * @var Fetcher
+	 */
+	protected $_fetcher;
 
 	public function __construct($endpoint, $schemes) {
 		$this->_schemes = (array) $schemes;
@@ -13,7 +20,9 @@ class Provider {
 	
 	public function matchUrl($url) {
 		foreach ($this->_schemes as $scheme) {
-			if (fnmatch($scheme, $url)) return true;	
+			if (fnmatch($scheme, $url)) {
+				return true;
+			}
 		}
 		return false;
 	}

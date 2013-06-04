@@ -97,6 +97,23 @@ $app['bakery.fetcher-factory'] = $app->share(function ($app) {
 	return $factory;
 });
 
+// TODO: markdown & oembed provider
+$app['oembed'] = null;
+$app['markdown'] = $app->share(function ($app)
+{
+	return new Markdown\Parser($app['oembed']);
+});
+$app['bakery.parser'] = $app->share(function (\Nassau\Silex\Application $app)
+{
+	/** @var \Markdown\Parser $markdown */
+	$markdown = $app['markdown'];
+	$date = new \DateTime($app['Env']['date']);
+
+	$parser = new \Nassau\Bakery\Parser\Parser($markdown, $date);
+	$parser->setCache($app->factoryCache('markdown'));
+	return $parser;
+});
+
 $app['bakery.indexer'] = $app->share(function (\Nassau\Silex\Application $app)
 {
 	/** @var \Nassau\Bakery\Fetcher\FetcherFactoryInterface $fetcherFactory */
@@ -106,7 +123,10 @@ $app['bakery.indexer'] = $app->share(function (\Nassau\Silex\Application $app)
 	/** @var \Monolog\Logger $monolog */
 	$monolog = $app['monolog'];
 
-	$indexer = new \Nassau\Bakery\Indexer($fetcherFactory, $storageFactor);
+	/** @var \Nassau\Bakery\Parser\Parser $parser */
+	$parser = $app['bakery.parser'];
+
+	$indexer = new \Nassau\Bakery\Indexer($fetcherFactory, $storageFactor, $parser);
 	$indexer->setLogger($monolog);
 
 	return $indexer;

@@ -1,12 +1,20 @@
-<?php namespace Markdown\oEmbed;
+<?php
 
-class oEmbed {
-	private $_providers = Array ();
+namespace Markdown\oEmbed;
+
+use Markdown\oEmbed\Provider\Provider;
+
+class oEmbed
+{
+	/**
+	 * @var Provider[]
+	 */
+	protected $_providers = array ();
 	
 	
 	public $discovery = false;
 	
-	public function getMetaDataForUrl($url, $options = Array()) {
+	public function getMetaDataForUrl($url, $options = array()) {
 		$provider = $this->getProviderForUrl($url);
 		if (!$provider) if (!$this->discovery) return null;
 		else {
@@ -19,18 +27,20 @@ class oEmbed {
 		
 		return $this->fetchData($provider, $url, $options);
 	}
-	public function fetchData(Provider\Provider $provider, $url, $options) {
+	public function fetchData(Provider $provider, $url, $options) {
 		return $provider->getFetcher()->fetch($url, $options);
 	}
 	
 	public function getProviderForUrl($url) {
 		foreach ($this->_providers as $provider) {
-			if ($provider->matchUrl($url)) return $provider;
+			if ($provider->matchUrl($url)) {
+				return $provider;
+			}
 		}
 		return null;
 	}
 	
-	public function addProvider(Provider\Provider $provider) {
+	public function addProvider(Provider $provider) {
 		$this->_providers[] = $provider;
 	}
 	

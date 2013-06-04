@@ -1,4 +1,7 @@
-<?php namespace Markdown\oEmbed\Provider;
+<?php
+
+namespace Markdown\oEmbed\Provider;
+
 use Markdown\oEmbed\Fetcher\Image as ImageFetcher;
 
 class Image extends Provider {

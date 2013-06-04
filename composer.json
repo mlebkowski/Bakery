@@ -22,7 +22,8 @@
             "Nassau\\Bakery": "src/",
             "Nassau\\Cache": "src/",
             "Nassau\\Silex": "src/",
-            "Nassau\\Utils": "src/"
+            "Nassau\\Utils": "src/",
+            "Markdown": "lib/"
         }
     }
 }

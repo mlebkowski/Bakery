@@ -20,6 +20,10 @@ class Cache
 	public function __construct($cachePath, $salt, \DateTime $invalidateBefore = null)
 	{
 		$this->cachePath = realpath($cachePath);
+		if (false === $this->cachePath)
+		{
+			throw new \InvalidArgumentException('Invalid cache path given: ' . $cachePath);
+		}
 		$this->salt = $salt;
 		$this->invalidateBefore = $invalidateBefore;
 	}

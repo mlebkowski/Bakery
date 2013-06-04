@@ -1,4 +1,6 @@
-<?php namespace Markdown;
+<?php
+
+namespace Markdown;
 #
 # Markdown  -  A text-to-HTML conversion tool for web writers
 #
@@ -11,62 +13,9 @@
 # <http://daringfireball.net/projects/markdown/>
 #
 
-
-define('MARKDOWN_VERSION',  "1.0.1k"); # Wed 26 Sep 2007
-
-
-#
-# Global default settings:
-#
-
-# Change to ">" for HTML output
-defined('MARKDOWN_EMPTY_ELEMENT_SUFFIX') || define('MARKDOWN_EMPTY_ELEMENT_SUFFIX',  " />");
-
-# Define the width of a tab for code blocks.
-defined('MARKDOWN_TAB_WIDTH') || define('MARKDOWN_TAB_WIDTH',     4);
-
-# i.e, first level header will be, h1 + level.
-defined('MARKDOWN_HEADER_LEVEL') || define('MARKDOWN_HEADER_LEVEL', 0);
-
-
+const MARKDOWN_VERSION = '1.0.1k';
 
 ### Standard Function Interface ###
-
-class Markdown {
-  private $parser;
-  private $cache;
-  public function __construct (\Nassau\Cache\Cache $cache = null, Embed $oembed = null) {
-    $this->cache = $cache;
-    if (!isset($this->parser)) {
-      $this->parser = new Parser($oembed);
-    }
-  }
-  public function parse($text, $no_markup = false) {
-    if ($this->cache):
-      $c = $this->cache;
-      $key = md5($text);
-      if ($no_markup) $key = md5($key . 'no_markup');
-      $parsed = $c->load($key);
-      if ($parsed === null):
-        $parsed = $this->parser->transform($text, $no_markup);
-        $c->save($key, $parsed);
-      endif;
-      return $parsed;
-
-    else: return $this->parser->transform($text, $no_markup); endif;
-  }
-  public function getTitle($text) {
-    $md = $this->parse($text);
-    if (preg_match('/<(h\d)(?:\s[^>]+)>(?<title>.*)<\/\1>/', $md, $m)) {
-      return strip_tags(str_replace(chr(160), ' ', $m['title']));
-    }
-  }
-}
-
-
-#
-# Markdown Parser Class
-#
 
 class Parser {
 
@@ -82,24 +31,24 @@ class Parser {
 	var $escape_chars = '\`*_{}[]()>#+-.!';
 
 	# Change to ">" for HTML output.
-	var $empty_element_suffix = MARKDOWN_EMPTY_ELEMENT_SUFFIX;
-	var $tab_width = MARKDOWN_TAB_WIDTH;
-	var $header_level = MARKDOWN_HEADER_LEVEL;
+	var $empty_element_suffix;
+	var $tab_width;
+	var $header_level;
 	
 	# Change to `true` to disallow markup or entities.
 	var $no_markup = false;
 	var $no_entities = false;
 
-  private $oembed;
+	/**
+	 * @var Embed
+	 */
+	protected $oembed;
 
-	function __construct(Embed $oembed) {
-	#
-	# Constructor function. Initialize appropriate member variables.
-	#
+	function __construct(Embed $oembed = null) {
 		$this->_initDetab();
 	
-	  $this->oembed = $oembed;
-	
+		$this->oembed = $oembed;
+
 		$this->nested_brackets = 
 			str_repeat('(?>[^\[\]]+|\[', $this->nested_brackets_depth).
 			str_repeat('\])*', $this->nested_brackets_depth);
@@ -124,7 +73,7 @@ class Parser {
 	var $in_anchor = false;
 
 
-	function transform($text, $no_markup = false) {
+	function transform($text, MarkupOptions $markupOptions = null) {
 	#
 	# Main function. The order in which other subs are called here is
 	# essential. Link and image substitutions need to happen before
@@ -135,8 +84,15 @@ class Parser {
 		# from other articles when generating a page which contains more than
 		# one article (e.g. an index page that shows the N most recent
 		# articles):
-		$this->no_markup = $no_markup;
-		
+		if (null === $markupOptions)
+		{
+			$markupOptions = new MarkupOptions;
+		}
+		$this->header_level = $markupOptions->getHeaderLevel();
+		$this->no_markup = false === $markupOptions->getAllowHtml();
+		$this->tab_width = $markupOptions->getTabWidth();
+		$this->empty_element_suffix = $markupOptions->getElementSuffix();
+
 		$this->urls = array();
 		$this->titles = array();
 		$this->html_hashes = array();
@@ -169,14 +125,15 @@ class Parser {
 	}
 
     function tokenize($str) {
-        $str = iconv("UTF-8", "ISO-8859-2//TRANSLIT", $str);
-        $str = strtr($str, 'êó±¶³¿¼æñÊÓ¡¦£¯¬ÆÑ', 'eoaslzxcneoaslzxcn');
-//        $str = iconv("UTF-8", "ASCII//TRANSLIT", $str);
+//        $str = iconv("UTF-8", "ISO-8859-2//TRANSLIT", $str);
+//        $str = strtr($str, 'ï¿½ó±¶³ï¿½ï¿½ï¿½ï¿½ï¿½Ó¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 'eoaslzxcneoaslzxcn');
+        $str = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $str);
         $str = strip_tags($str);
         $str = strtolower($str);
         $str = str_replace(Array(' ', '_'), Array('-', '-'), $str);
         $str = preg_replace('/^\d+|[^a-z0-9-]/', '', $str);
         $str = preg_replace('/-[-]+/', '-', $str);
+		$str = trim($str, '-');
         return $str;
     }
 	
@@ -507,8 +464,8 @@ class Parser {
 		return preg_replace_callback('/ {2,}\n/', 
 			array(&$this, '_doHardBreaks_callback'), $text);
 	}
-	function _doHardBreaks_callback($matches) {
-		return $this->hashPart("<br$this->empty_element_suffix\n");
+	function _doHardBreaks_callback() {
+		return $this->hashPart("<br{$this->empty_element_suffix}\n");
 	}
 
 
@@ -617,7 +574,7 @@ class Parser {
 		return $result;
 	}
 	function _doAnchors_inline_callback($matches) {
-		$whole_match	=  $matches[1];
+//		$whole_match	=  $matches[1];
 		$link_text		=  $this->runSpanGamut($matches[2]);
 		$url			=  $matches[3] == '' ? $matches[4] : $matches[3];
 		$title			=& $matches[7];
@@ -721,7 +678,7 @@ class Parser {
 		return $result;
 	}
 	function _doImages_inline_callback($matches) {
-		$whole_match	= $matches[1];
+//		$whole_match	= $matches[1];
 		$alt_text		= $matches[2];
 		$url			= $matches[3] == '' ? $matches[4] : $matches[3];
 		$title			=& $matches[7];
@@ -808,7 +765,7 @@ class Parser {
 		# Re-usable patterns to match list item bullets and number markers:
 		$marker_ul  = '[*+-]';
 		$marker_ol  = '\d+[.]';
-		$marker_any = "(?:$marker_ul|$marker_ol)";
+//		$marker_any = "(?:$marker_ul|$marker_ol)";
 
 		$markers = array($marker_ul, $marker_ol);
 
@@ -860,7 +817,7 @@ class Parser {
 		# Re-usable patterns to match list item bullets and number markers:
 		$marker_ul  = '[*+-]';
 		$marker_ol  = '\d+[.]';
-		$marker_any = "(?:$marker_ul|$marker_ol)";
+//		$marker_any = "(?:$marker_ul|$marker_ol)";
 		
 		$list = $matches[1];
 		$list_type = preg_match("/$marker_ul/", $matches[3]) ? "ul" : "ol";
@@ -923,7 +880,7 @@ class Parser {
 	function _processListItems_callback($matches) {
 		$item = $matches[4];
 		$leading_line =& $matches[1];
-		$leading_space =& $matches[2];
+//		$leading_space =& $matches[2];
 		$tailing_blank_line =& $matches[5];
 
 		if ($leading_line || $tailing_blank_line || 
@@ -1181,12 +1138,15 @@ class Parser {
 	function _doAutoLinks_url_callback($matches) {
 		$url = $this->encodeAmpsAndAngles($matches[1]);
 		$link = "<a href=\"$url\">$url</a>";
-    if ($this->oembed) {
-      $object = $this->oembed->parse($matches[1]);
-			if ($object != $matches[1]) $link = $object;
+		if ($this->oembed) {
+			$object = $this->oembed->parse($matches[1]);
+			if ($object != $matches[1]) {
+				$link = $object;
+			}
 		}
 		return $this->hashPart($link);
 	}
+
 	function _doAutoLinks_email_callback($matches) {
 		$address = $matches[1];
 		$link = $this->encodeEmailAddress($address);

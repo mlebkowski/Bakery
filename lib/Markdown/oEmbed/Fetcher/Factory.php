@@ -1,4 +1,6 @@
-<?php namespace Markdown\oEmbed\Fetcher;
+<?php
+
+namespace Markdown\oEmbed\Fetcher;
 
 class Factory {
 	public static function buildFetcher($endpoint) {
