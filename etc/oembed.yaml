@@ -3,7 +3,7 @@ Vimeo:
   Schemes:
     - http://www.vimeo.com/*
     - http://www.vimeo.com/groups/*/*
-  Test: 
+  Test:
     - http://vimeo.com/20899145
     - http://vimeo.com/27423690
 

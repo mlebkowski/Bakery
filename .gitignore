@@ -1,5 +1,6 @@
 .idea/
 etc/application.yaml
+etc/projects.yaml
 composer.phar
 vendor
 data/*

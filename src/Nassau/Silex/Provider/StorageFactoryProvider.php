@@ -6,9 +6,8 @@ use Nassau\Bakery\ProjectInterface;
 use Nassau\Bakery\Storage\Storage;
 use Nassau\Bakery\Storage\TableDefinition;
 use Silex\Application;
-use Silex\ServiceProviderInterface;
 
-class StorageFactoryProvider implements ServiceProviderInterface
+class StorageFactoryProvider extends AbstractConfigBasedProvider
 {
 	/**
 	 * Registers services on the given app.
@@ -37,11 +36,11 @@ class StorageFactoryProvider implements ServiceProviderInterface
 
 				$storage = new Storage($pdo);
 
-				foreach ($app['bakery.storage-tables'] as $tableDefinition)
+				foreach ($app['bakery.storage-factory.tables'] as $tableDefinition)
 				{
 					$storage->initTable($tableDefinition);
 				}
-				$app[$key] = $app->share(function () use ($storage) { return $storage; });
+				$app[$key] = $storage; // $app->share(function () use ($storage) { return $storage; });
 				return $storage;
 			};
 		};
@@ -56,9 +55,11 @@ class StorageFactoryProvider implements ServiceProviderInterface
 	 */
 	public function boot(Application $app)
 	{
-		$app['bakery.storage-tables'] = $app->share(function (Application $app) {
+		$config = $this->getConfig($app['bakery.storage-factory.config_file']);
+
+		$app['bakery.storage-factory.tables'] = $app->share(function () use ($config) {
 			$tables = array ();
-			foreach ($app['Storage']['Tables'] as $name => $columns)
+			foreach ($config['Tables'] as $name => $columns)
 			{
 				$table = new TableDefinition;
 				$table->setName($name);

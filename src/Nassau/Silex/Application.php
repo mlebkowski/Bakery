@@ -34,24 +34,8 @@ class Application extends \Silex\Application
 	public function getProjects()
 	{
 		/** @var ProjectsCollection $p */
-		$p = $this['ProjectsCollection'];
+		$p = $this['bakery.project-list'];
 		return $p;
-	}
-
-	/**
-	 * @param string $key
-	 * @param string $secret
-	 *
-	 * @deprecated
-	 * @return \Dropbox\Client
-	 */
-	public function getDropboxClient($key, $secret)
-	{
-		$accessToken = new AccessToken($key, $secret);
-		$closure = $this['dropbox-sdk'];
-		/** @var \Dropbox\Client $client */
-		$client = $closure($accessToken);
-		return $client;
 	}
 
 	/**

@@ -7,13 +7,10 @@ use Nassau\Bakery\Project;
 use Nassau\Bakery\ProjectsCollection;
 use Nassau\Bakery\PullSource;
 use Nassau\Bakery\PushDestination;
-use Silex\ServiceProviderInterface;
 use Silex\Application;
 
-class ProjectListProvider implements ServiceProviderInterface
+class ProjectListProvider extends AbstractConfigBasedProvider
 {
-	protected $config;
-
 	/**
 	 * Registers services on the given app.
 	 *
@@ -24,8 +21,7 @@ class ProjectListProvider implements ServiceProviderInterface
 	 */
 	public function register(Application $app)
 	{
-		$this->config = $app['Projects'];
-		$app['ProjectsCollection'] = $app->share(function (Application $app) {
+		$app['bakery.project-list'] = $app->share(function () {
 			return new ProjectsCollection;
 		});
 	}
@@ -40,9 +36,10 @@ class ProjectListProvider implements ServiceProviderInterface
 	public function boot(Application $app)
 	{
 		/** @var ProjectsCollection $collection */
-		$collection = $app['ProjectsCollection'];
+		$collection = $app['bakery.project-list'];
 
-		foreach ($this->config as $name => $item)
+		$config = $this->getConfig($app['bakery.project-list.config_file']);
+		foreach ($config as $name => $item)
 		{
 			$project = $this->createProjectFromConfiguration($name, $item);
 			$collection->offsetSet($name, $project);

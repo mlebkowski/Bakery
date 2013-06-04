@@ -4,6 +4,7 @@ use Dropbox\AccessToken;
 use Dropbox\AccessType;
 use Igorw\Silex\ConfigServiceProvider;
 use Knp\Provider\ConsoleServiceProvider;
+use Nassau\Silex\Provider\MarkdownProvider;
 use Nassau\Silex\Provider\ProjectListProvider;
 use Nassau\Silex\Provider\StorageFactoryProvider;
 
@@ -16,8 +17,8 @@ $app->register(new ConfigServiceProvider(dirname(__DIR__) . '/etc/application.ya
 	'path.data' => dirname(__DIR__) . '/data',
 	'path.src' => dirname(__DIR__) . '/src',
 	'path.cache' => dirname(__DIR__) . '/cache',
+	'path.config' => dirname(__DIR__) . '/etc',
 ));
-$app->register(new ConfigServiceProvider(dirname(__DIR__) . '/etc/storage.yaml'));
 
 $app->register(new ConsoleServiceProvider, array(
 	'console.name' => 'Bakery',
@@ -25,8 +26,16 @@ $app->register(new ConsoleServiceProvider, array(
 	'console.project_directory' => dirname(__DIR__)
 ));
 
-$app->register(new ProjectListProvider);
-$app->register(new StorageFactoryProvider);
+$app->register(new ProjectListProvider, array (
+	'bakery.project-list.config_file' => $app['path.config'] . '/projects.yaml',
+));
+$app->register(new StorageFactoryProvider, array (
+	'bakery.storage-factory.config_file' => $app['path.config'] . '/storage.yaml',
+));
+$app->register(new MarkdownProvider, array (
+	'markdown.parser.version_timestamp' => new \DateTime($app['Env']['date']),
+	'markdown.oembed.config_file' => $app['path.config'] . '/oembed.yaml'
+));
 
 $app->register(new Silex\Provider\MonologServiceProvider, array(
 	'monolog.logfile' => $app['path.cache'] . strftime('/bakery-%Y-%m-%d.log'),
@@ -97,16 +106,10 @@ $app['bakery.fetcher-factory'] = $app->share(function ($app) {
 	return $factory;
 });
 
-// TODO: markdown & oembed provider
-$app['oembed'] = null;
-$app['markdown'] = $app->share(function ($app)
-{
-	return new Markdown\Parser($app['oembed']);
-});
 $app['bakery.parser'] = $app->share(function (\Nassau\Silex\Application $app)
 {
 	/** @var \Markdown\Parser $markdown */
-	$markdown = $app['markdown'];
+	$markdown = $app['markdown.parser'];
 	$date = new \DateTime($app['Env']['date']);
 
 	$parser = new \Nassau\Bakery\Parser\Parser($markdown, $date);
